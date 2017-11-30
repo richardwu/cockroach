@@ -131,13 +131,13 @@ CREATE TABLE "user content"."customer reviews" (
 statement ok
 INSERT INTO orders VALUES (1, 1, '780', 2)
 
-statement error pgcode 23503 foreign key violation: values \['780'\] in columns \[sku\] referenced in table "orders"
+statement error pgcode 23503 foreign key violation: values \['780'\] in columns \(sku\) referenced in table "orders"
 DELETE FROM products
 
 statement ok
 INSERT INTO "user content"."customer reviews" VALUES (1, '780', 2, 1, 1, NULL)
 
-statement error pgcode 23503 foreign key violation: value \['790'\] not found in products@primary \[sku\]
+statement error pgcode 23503 foreign key violation: value \['790'\] not found in products@primary \(sku\)
 INSERT INTO "user content"."customer reviews" (id, product, body) VALUES (2, '790', 'would not buy again')
 
 statement ok
@@ -156,13 +156,13 @@ SHOW CONSTRAINTS FROM "user content".review_stats
 review_stats  primary   PRIMARY KEY  id  NULL
 review_stats  reviewfk  FOREIGN KEY  id  customer reviews.[id]
 
-statement error pgcode 23503 foreign key violation: value \[5\] not found in customer reviews@primary \[id\]
+statement error pgcode 23503 foreign key violation: value \[5\] not found in customer reviews@primary \(id\)
 INSERT INTO "user content".review_stats (id, upvotes) VALUES (5, 1)
 
 statement ok
 INSERT INTO "user content".review_stats (id, upvotes) VALUES (2, 1)
 
-statement error pgcode 23503 foreign key violation: values \[2\] in columns \[id\] referenced in table "review_stats"
+statement error pgcode 23503 foreign key violation: values \[2\] in columns \(id\) referenced in table "review_stats"
 DELETE FROM "user content"."customer reviews" WHERE id = 2
 
 statement ok
@@ -176,21 +176,21 @@ review_stats  primary   PRIMARY KEY  id  NULL
 statement ok
 DELETE FROM "user content"."customer reviews"
 
-statement error pgcode 23503 foreign key violation: value \['790'\] not found in products@primary \[sku\]
+statement error pgcode 23503 foreign key violation: value \['790'\] not found in products@primary \(sku\)
 INSERT INTO orders VALUES (2, 1, '790', 2)
 
-statement error pgcode 23503 foreign key violation: value \[43\] not found in customers@primary \[id\]
+statement error pgcode 23503 foreign key violation: value \[43\] not found in customers@primary \(id\)
 INSERT INTO orders VALUES (2, 1, '780', 43)
 
 statement ok
 INSERT INTO orders VALUES (2, 1, '780', 1)
 
 # Try to point to missing FK.
-statement error pgcode 23503 foreign key violation: value \['790'\] not found in products@primary \[sku\]
+statement error pgcode 23503 foreign key violation: value \['790'\] not found in products@primary \(sku\)
 UPDATE orders SET product = '790' WHERE id = 2
 
 # Try to point to missing fk *while changing PK*.
-statement error pgcode 23503 foreign key violation: value \['790'\] not found in products@primary \[sku\]
+statement error pgcode 23503 foreign key violation: value \['790'\] not found in products@primary \(sku\)
 UPDATE orders SET id = 3, product = '790' WHERE id = 2
 
 # Change PK while leaving everything else is fine though.
@@ -234,15 +234,15 @@ statement ok
 INSERT INTO delivery ("order", shipment, item) VALUES
   (1, 1, '867072000006'), (1, 1, '867072000006'), (1, 1, '885155001450'), (1, 1, '867072000006')
 
-statement error pgcode 23503 foreign key violation: value \['missing'\] not found in products@products_upc_key \[upc\]
+statement error pgcode 23503 foreign key violation: value \['missing'\] not found in products@products_upc_key \(upc\)
 INSERT INTO delivery ("order", shipment, item) VALUES
   (1, 1, '867072000006'), (1, 1, 'missing'), (1, 1, '885155001450'), (1, 1, '867072000006')
 
-statement error pgcode 23503 foreign key violation: value \[1 99\] not found in orders@primary \[id shipment\]
+statement error pgcode 23503 foreign key violation: value \[1 99\] not found in orders@primary \(id, shipment\)
 INSERT INTO delivery ("order", shipment, item) VALUES
   (1, 1, '867072000006'), (1, 99, '867072000006')
 
-statement error pgcode 23503 foreign key violation: values \['867072000006'\] in columns \[upc\] referenced in table "delivery"
+statement error pgcode 23503 foreign key violation: values \['867072000006'\] in columns \(upc\) referenced in table "delivery"
 DELETE FROM products WHERE sku = 'VP-W9QH-W44L'
 
 # Blanking a field nobody cares about is fine.
@@ -254,7 +254,7 @@ statement ok
 UPDATE products SET sku = '770' WHERE sku = '750'
 
 # Changing referenced PK fails.
-statement error pgcode 23503 foreign key violation: values \['780'\] in columns \[sku\] referenced in table "orders"
+statement error pgcode 23503 foreign key violation: values \['780'\] in columns \(sku\) referenced in table "orders"
 UPDATE products SET sku = '770' WHERE sku = '780'
 
 # No-op change to existing data is fine.
@@ -262,7 +262,7 @@ statement ok
 UPDATE products SET upc = '885155001450' WHERE sku = '780'
 
 # Changing referenced non-pk index fails.
-statement error pgcode 23503 foreign key violation: values \['885155001450'\] in columns \[upc\] referenced in table "delivery"
+statement error pgcode 23503 foreign key violation: values \['885155001450'\] in columns \(upc\) referenced in table "delivery"
 UPDATE products SET upc = 'blah' WHERE sku = '780'
 
 statement ok
@@ -293,7 +293,7 @@ statement ok
 UPDATE products SET upc = '885155001450' WHERE sku = '780'
 
 # Changing referenced non-pk index fails once again with constraint re-added.
-statement error pgcode 23503 foreign key violation: values \['885155001450'\] in columns \[upc\] referenced in table "delivery"
+statement error pgcode 23503 foreign key violation: values \['885155001450'\] in columns \(upc\) referenced in table "delivery"
 UPDATE products SET upc = 'blah' WHERE sku = '780'
 
 statement ok
@@ -319,10 +319,10 @@ ALTER TABLE "user content"."customer reviews"
 statement error missing value for column "shipment" in multi-part foreign key
 INSERT INTO "user content"."customer reviews" (id, product, body, "order") VALUES (4, '780', 'i ordered 101 of them', 9)
 
-statement error pgcode 23503 foreign key violation: value \[9 1\] not found in orders@primary \[id shipment\]
+statement error pgcode 23503 foreign key violation: value \[9 1\] not found in orders@primary \(id, shipment\)
 INSERT INTO "user content"."customer reviews" (id, product, body, "order", shipment) VALUES (4, '780', 'i ordered 101 of them', 9, 1)
 
-statement error pgcode 23503 foreign key violation: value \[1 9\] not found in orders@primary \[id shipment\]
+statement error pgcode 23503 foreign key violation: value \[1 9\] not found in orders@primary \(id, shipment\)
 INSERT INTO "user content"."customer reviews" (id, product, body, shipment, "order") VALUES (4, '780', 'i ordered 101 of them', 9, 1)
 
 statement error pgcode 23503 foreign key violation: "customer reviews" row order=9, shipment=NULL has no match in "orders"
@@ -347,10 +347,10 @@ statement ok
 UPDATE products SET sku = '750', vendor = 'roomba' WHERE sku = '780'
 
 # Changing PK and referenced secondary index is not ok.
-statement error pgcode 23503 foreign key violation: values \['885155001450'\] in columns \[upc\] referenced in table "delivery"
+statement error pgcode 23503 foreign key violation: values \['885155001450'\] in columns \(upc\) referenced in table "delivery"
 UPDATE products SET sku = '780', upc = 'blah' WHERE sku = '750'
 
-statement error pgcode 23503 foreign key violation: values \['885155001450'\] in columns \[upc\] referenced in table "delivery"
+statement error pgcode 23503 foreign key violation: values \['885155001450'\] in columns \(upc\) referenced in table "delivery"
 DELETE FROM products WHERE sku = '750'
 
 statement error "products" is referenced by foreign key from table "orders"
@@ -581,19 +581,19 @@ refpairs  CREATE TABLE refpairs (
     FAMILY "primary" (a, b, c, rowid)
 )
 
-statement error pgcode 23503 foreign key violation: value \[100 'two'\] not found in pairs@pairs_src_dest_key \[src dest\]
+statement error pgcode 23503 foreign key violation: value \[100 'two'\] not found in pairs@pairs_src_dest_key \(src, dest\)
 INSERT INTO refpairs VALUES (100, 'two'), (200, 'two')
 
 statement ok
 INSERT INTO refpairs VALUES (100, 'one', 3), (200, 'two', null)
 
-statement error pgcode 23503 foreign key violation: values \[200 'two'\] in columns \[src dest\] referenced in table "refpairs"
+statement error pgcode 23503 foreign key violation: values \[200 'two'\] in columns \(src, dest\) referenced in table "refpairs"
 UPDATE pairs SET dest = 'too' WHERE id = 2
 
-statement error pgcode 23503 foreign key violation: values \[200 'two'\] in columns \[src dest\] referenced in table "refpairs"
+statement error pgcode 23503 foreign key violation: values \[200 'two'\] in columns \(src, dest\) referenced in table "refpairs"
 DELETE FROM pairs WHERE id = 2
 
-statement error pgcode 23503 foreign key violation: values \[100 'one'\] in columns \[src dest\] referenced in table "refpairs"
+statement error pgcode 23503 foreign key violation: values \[100 'one'\] in columns \(src, dest\) referenced in table "refpairs"
 DELETE FROM pairs WHERE id = 1
 
 # since PKs are handled differently than other indexes, check pk<->pk ref with no other indexes in play.
@@ -609,7 +609,7 @@ INSERT INTO foo VALUES (2)
 statement ok
 INSERT INTO bar VALUES (2)
 
-statement error pgcode 23503 foreign key violation: values \[2] in columns \[id\] referenced in table "bar"
+statement error pgcode 23503 foreign key violation: values \[2] in columns \(id\) referenced in table "bar"
 DELETE FROM foo
 
 statement ok
@@ -621,7 +621,7 @@ CREATE TABLE otherdb.othertable (id INT PRIMARY KEY)
 statement ok
 CREATE TABLE crossdb (id INT PRIMARY KEY, FOREIGN KEY (id) REFERENCES otherdb.othertable)
 
-statement error pgcode 23503 foreign key violation: value \[2\] not found in othertable@primary \[id\]
+statement error pgcode 23503 foreign key violation: value \[2\] not found in othertable@primary \(id\)
 INSERT INTO crossdb VALUES (2)
 
 statement ok
@@ -630,7 +630,7 @@ INSERT INTO otherdb.othertable VALUES (1), (2)
 statement ok
 INSERT INTO crossdb VALUES (2)
 
-statement error pgcode 23503 foreign key violation: values \[2] in columns \[id\] referenced in table "crossdb"
+statement error pgcode 23503 foreign key violation: values \[2] in columns \(id\) referenced in table "crossdb"
 DELETE FROM otherdb.othertable WHERE id = 2
 
 statement error "othertable" is referenced by foreign key from table "crossdb"
@@ -695,7 +695,7 @@ COMMIT
 statement ok
 BEGIN TRANSACTION
 
-statement error pgcode 23503 foreign key violation: value \[3\] not found in tx@primary \[id\]
+statement error pgcode 23503 foreign key violation: value \[3\] not found in tx@primary \(id\)
 INSERT INTO tx_leg VALUES (302, 3);
 
 statement ok

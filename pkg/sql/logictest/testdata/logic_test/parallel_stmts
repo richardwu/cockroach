@@ -38,7 +38,7 @@ DELETE FROM kv WHERE k = 1 RETURNING NOTHING
 statement ok
 INSERT INTO fk VALUES (2)
 
-statement error foreign key violation: values \[2\] in columns \[k\] referenced in table \"fk\"
+statement error foreign key violation: values \[2\] in columns \(k\) referenced in table \"fk\"
 DELETE FROM kv WHERE k = 2 RETURNING NOTHING
 
 statement ok
@@ -248,7 +248,7 @@ DELETE FROM kv WHERE k = 2 RETURNING NOTHING
 statement ok
 DELETE FROM kv WHERE k = 3 RETURNING NOTHING
 
-statement error foreign key violation: values \[2\] in columns \[k\] referenced in table \"fk\"
+statement error foreign key violation: values \[2\] in columns \(k\) referenced in table \"fk\"
 COMMIT
 
 statement ok

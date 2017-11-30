@@ -16,6 +16,7 @@ package sqlbase
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
@@ -165,24 +166,24 @@ func (f *fkBatchChecker) runCheck(
 					fkValues[valueIdx] = newRow[fk.ids[colID]]
 				}
 				return pgerror.NewErrorf(pgerror.CodeForeignKeyViolationError,
-					"foreign key violation: value %s not found in %s@%s %s",
-					fkValues, fk.searchTable.Name, fk.searchIdx.Name, fk.searchIdx.ColumnNames[:fk.prefixLen])
+					"foreign key violation: value %s not found in %s@%s (%s)",
+					fkValues, fk.searchTable.Name, fk.searchIdx.Name, strings.Join(fk.searchIdx.ColumnNames[:fk.prefixLen], ", "))
 			}
 		case CheckDeletes:
 			// If we're deleting, then there's a violation if the scan found something.
 			if !fk.rf.kvEnd {
 				if oldRow == nil {
 					return pgerror.NewErrorf(pgerror.CodeForeignKeyViolationError,
-						"foreign key violation: non-empty columns %s referenced in table %q",
-						fk.writeIdx.ColumnNames[:fk.prefixLen], fk.searchTable.Name)
+						"foreign key violation: non-empty columns (%s) referenced in table %q",
+						strings.Join(fk.writeIdx.ColumnNames[:fk.prefixLen], ", "), fk.searchTable.Name)
 				}
 				fkValues := make(tree.Datums, fk.prefixLen)
 				for valueIdx, colID := range fk.searchIdx.ColumnIDs[:fk.prefixLen] {
 					fkValues[valueIdx] = oldRow[fk.ids[colID]]
 				}
 				return pgerror.NewErrorf(pgerror.CodeForeignKeyViolationError,
-					"foreign key violation: values %v in columns %s referenced in table %q",
-					fkValues, fk.writeIdx.ColumnNames[:fk.prefixLen], fk.searchTable.Name)
+					"foreign key violation: values %v in columns (%s) referenced in table %q",
+					fkValues, strings.Join(fk.writeIdx.ColumnNames[:fk.prefixLen], ", "), fk.searchTable.Name)
 			}
 		default:
 			log.Fatalf(ctx, "impossible case: baseFKHelper has dir=%v", fk.dir)
